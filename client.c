@@ -20,10 +20,8 @@ int main(int argc, char* args[])
     char * server_endpoint = args[1];
     char * allowed_ips = args[2];
 
-
     int sockfd, connfd;
     struct sockaddr_in servaddr, cli;
-
 
     // socket create and verification
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -42,7 +40,7 @@ int main(int argc, char* args[])
 
     char * public_key, private_key;
     // generate_public_and_private_keys(public_key, private_key);
-    system("./client_setup");
+    system("./client_setup.sh");
     // connect the client socket to server socket
     if (connect(sockfd, (SA*)&servaddr, sizeof(servaddr))
         != 0) {
@@ -59,7 +57,7 @@ int main(int argc, char* args[])
 
     // connect_to_vpn(server_key, private_key, allowed_ips);
     char* command = malloc(2000);
-    sprintf(command, "./client_interface %s %s %s", server_key, allowed_ips, server_endpoint);
+    sprintf(command, "./client_interface.sh %s %s %s", server_key, allowed_ips, server_endpoint);
     system(command);
     free(command);
     // close the socket
