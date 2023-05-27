@@ -7,7 +7,7 @@
 #include <sys/socket.h>
 #include "dhcp_utils.c"
 
-#define PORT 8080
+#define PORT 12349
 #define BUFFER_SIZE 1024
 
 
@@ -40,7 +40,7 @@ void handle_client(int client_socket, char* public_key, char * server_public_key
 }
 
 int main(int argc, char * args[]) {
-    if(argc != 1){
+    if(argc != 2){
         return 0;
     }
     char * server_public_key = args[1];
@@ -51,13 +51,13 @@ int main(int argc, char * args[]) {
     char buffer[BUFFER_SIZE];
 
     // Create a socket
-    if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0) {
+    if ((server_fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)) == 0) {
+
         perror("socket failed");
         exit(EXIT_FAILURE);
     }
 
-    // Set socket options
-    if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt))) {
+    if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt))) {
         perror("setsockopt failed");
         exit(EXIT_FAILURE);
     }
