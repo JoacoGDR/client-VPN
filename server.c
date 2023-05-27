@@ -1,101 +1,112 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/types.h>
-#include <unistd.h> // read(), write(), close()
-#include <sys/socket.h>
-#include <netdb.h>
+#include <unistd.h>
 #include <netinet/in.h>
-#define MAX 80
-#define PORT 8080
-#define SA struct sockaddr
-   
-struct ClientInfo {   // Structure declaration
-  char* publicKey;           // Member (int variable)
-  char* assignedIP;       // Member (char variable)
-}; //
+#include <sys/types.h>          /* See NOTES */
+#include <sys/socket.h>
+#include "dhcp_utils.c"
 
-// Function designed for chat between client and server.
-void func(int connfd)
-{
-    char buff[MAX];
-    int n;
-    // infinite loop for chat
-    for (;;) {
-        bzero(buff, MAX);
-   
-        // read the message from client and copy it in buffer
-        read(connfd, buff, sizeof(buff));
-        // print buffer which contains the client contents
-        printf("From client: %s\t To client : ", buff);
-        bzero(buff, MAX);
-        n = 0;
-        // copy server message in the buffer
-        while ((buff[n++] = getchar()) != '\n')
-            ;
-   
-        // and send that buffer to client
-        write(connfd, buff, sizeof(buff));
-   
-        // if msg contains "Exit" then server exit and chat ended.
-        if (strncmp("exit", buff, 4) == 0) {
-            printf("Server Exit...\n");
-            break;
+#define PORT 8080
+#define BUFFER_SIZE 1024
+
+
+
+char * dhcp_lease_ip(char * publicKey) {
+    char * ip = getIPAddress(publicKey);
+    if (ip == NULL) {
+        ip = generateIPAddress();
+        if(ip == NULL){
+            exit(EXIT_FAILURE);
         }
+        addEntry(publicKey, ip);
     }
+    return ip;
 }
-   
-// Driver function
-int main()
-{
-    
-    int sockfd, connfd, len;
-    struct sockaddr_in servaddr, cli;
-   
-    // socket create and verification
-    sockfd = socket(AF_INET, SOCK_STREAM, 0);
-    if (sockfd == -1) {
-        printf("socket creation failed...\n");
-        exit(0);
+
+
+void generate_peer(char* public_key, char* ip_address) {
+    char command[BUFFER_SIZE];
+    memset(command, 0, BUFFER_SIZE);
+
+    sprintf(command, "wg set wg0 peer %s allowed-ips %s/32", public_key, ip_address);
+    printf("Running command: %s\n", command);
+    system(command);
+}
+
+void handle_client(int client_socket, char* public_key, char * server_public_key) {
+    generate_peer(public_key, dhcp_lease_ip(public_key));
+    send(client_socket, server_public_key, strlen(server_public_key), 0);
+}
+
+int main(int argc, char * args[]) {
+    if(argc != 1){
+        return 0;
     }
-    else
-        printf("Socket successfully created..\n");
-    bzero(&servaddr, sizeof(servaddr));
-   
-    // assign IP, PORT
-    servaddr.sin_family = AF_INET;
-    servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
-    servaddr.sin_port = htons(PORT);
-   
-    // Binding newly created socket to given IP and verification
-    if ((bind(sockfd, (SA*)&servaddr, sizeof(servaddr))) != 0) {
-        printf("socket bind failed...\n");
-        exit(0);
+    char * server_public_key = args[1];
+    int server_fd, client_socket;
+    struct sockaddr_in address;
+    int opt = 1;
+    int addrlen = sizeof(address);
+    char buffer[BUFFER_SIZE];
+
+    // Create a socket
+    if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0) {
+        perror("socket failed");
+        exit(EXIT_FAILURE);
     }
-    else
-        printf("Socket successfully binded..\n");
-   
-    // Now server is ready to listen and verification
-    if ((listen(sockfd, 5)) != 0) {
-        printf("Listen failed...\n");
-        exit(0);
+
+    // Set socket options
+    if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt))) {
+        perror("setsockopt failed");
+        exit(EXIT_FAILURE);
     }
-    else
-        printf("Server listening..\n");
-    len = sizeof(cli);
-   
-    // Accept the data packet from client and verification
-    connfd = accept(sockfd, (SA*)&cli, &len);
-    if (connfd < 0) {
-        printf("server accept failed...\n");
-        exit(0);
+
+    address.sin_family = AF_INET;
+    address.sin_addr.s_addr = INADDR_ANY;
+    address.sin_port = htons(PORT);
+
+    // Bind the socket to the specified IP and port
+    if (bind(server_fd, (struct sockaddr*)&address, sizeof(address)) < 0) {
+        perror("bind failed");
+        exit(EXIT_FAILURE);
     }
-    else
-        printf("server accept the client...\n");
-   
-    // Function for chatting between client and server
-    func(connfd);
-   
-    // After chatting close the socket
-    close(sockfd);
+
+    // Start listening for incoming connections
+    if (listen(server_fd, 3) < 0) {
+        perror("listen failed");
+        exit(EXIT_FAILURE);
+    }
+
+    printf("Server listening on port %d\n", PORT);
+
+    while (1) {
+        // Accept a new client connection
+        if ((client_socket = accept(server_fd, (struct sockaddr*)&address, (socklen_t*)&addrlen)) < 0) {
+            perror("accept failed");
+            exit(EXIT_FAILURE);
+        }
+
+        // Read the public key provided by the client
+        memset(buffer, 0, BUFFER_SIZE);
+        ssize_t bytes_received = read(client_socket, buffer, BUFFER_SIZE);
+        if (bytes_received < 0) {
+            perror("read failed");
+            exit(EXIT_FAILURE);
+        }
+
+        // Process the public key and send the file
+        if (bytes_received > 0) {
+            printf("Received public key: %s\n", buffer);
+            handle_client(client_socket, buffer, server_public_key);
+        }
+
+        // Close the client socket
+        close(client_socket);
+    }
+
+    // Close the server socket
+    close(server_fd);
+
+    return 0;
 }
