@@ -7,7 +7,7 @@
 #include <sys/socket.h>
 #include <unistd.h> // read(), write(), close()
 #define MAX 80
-#define PORT 12349
+#define PORT 51822
 #define SA struct sockaddr
 
 
@@ -44,9 +44,27 @@ int main(int argc, char* args[])
 
     printf("Server address set\n");
 
-    char * public_key, private_key;
+    char * public_key;
     printf("Generating keys...\n");
     system("./client_setup.sh");
+
+
+    //store the public key that is stored in public_key to the variable char * public_key
+    FILE *fp;
+    fp = fopen("public_key.txt", "r");
+    if(fp == NULL){
+        printf("Error opening file\n");
+        exit(1);
+    }
+    fseek(fp, 0, SEEK_END);
+    long fsize = ftell(fp);
+    fseek(fp, 0, SEEK_SET);
+    public_key = malloc(fsize + 1);
+    fread(public_key, fsize, 1, fp);
+    fclose(fp);
+    public_key[fsize] = 0;
+    
+
     printf("Keys generated\n");
     // connect the client socket to server socket
     if (connect(sockfd, (SA*)&servaddr, sizeof(servaddr))
@@ -74,7 +92,7 @@ int main(int argc, char* args[])
     printf("Running client interface...\n");
     sprintf(command, "./client_interface.sh %s %s %s", server_key, allowed_ips, server_endpoint);
     system(command);
-    
+
     free(command);
     // close the socket
     close(sockfd);
