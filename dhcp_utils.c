@@ -10,7 +10,7 @@
 #define CSV_FILE "dhcp_db.csv"
 #define MAX_HOSTS 200
 
-int counter = 0;
+int counter = 1;
 
 
 
