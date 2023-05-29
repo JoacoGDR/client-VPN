@@ -31,7 +31,7 @@ void generate_peer(char * interface, char* public_key, char* ip_address) {
     char command[BUFFER_SIZE];
     memset(command, 0, BUFFER_SIZE);
 
-    sprintf(command, "wg set %s peer %s allowed-ips %s/32",interface, public_key, ip_address);
+    sprintf(command, "sudo wg set %s peer %s allowed-ips %s/32",interface, public_key, ip_address);
     printf("Running command: %s\n", command);
     system(command);
 }
