@@ -40,6 +40,7 @@ void handle_client(int client_socket,char * interface, char* public_key, char * 
     printf("Handling client\n");
     printf("Generating Peer with public key: %s\n", public_key);
     generate_peer(interface, public_key, dhcp_lease_ip(public_key));
+    printf("Going to send to client the server public key: %s\n", server_public_key);
     send(client_socket, server_public_key, strlen(server_public_key), 0);
 }
 
