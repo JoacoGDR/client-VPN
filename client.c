@@ -20,45 +20,61 @@ int main(int argc, char* args[])
     char * server_endpoint = args[1];
     char * allowed_ips = args[2];
 
+    printf("Server endpoint: %s\n", server_endpoint);
+    printf("Allowed ips: %s\n", allowed_ips);
     int sockfd, connfd;
     struct sockaddr_in servaddr, cli;
-
     // socket create and verification
+
+    printf("Creating socket...\n");
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd == -1) {
         printf("socket creation failed...\n");
         exit(0);
     }
-    else
-        printf("Socket successfully created..\n");
+    
+    printf("Socket successfully created..\n");
+    printf("Setting up server address...\n");
     bzero(&servaddr, sizeof(servaddr));
- 
+    
     // assign IP, PORT
     servaddr.sin_family = AF_INET;
     servaddr.sin_addr.s_addr = inet_addr(server_endpoint);
     servaddr.sin_port = htons(PORT);
 
+    printf("Server address set\n");
+
     char * public_key, private_key;
-    // generate_public_and_private_keys(public_key, private_key);
+    printf("Generating keys...\n");
     system("./client_setup.sh");
+    printf("Keys generated\n");
     // connect the client socket to server socket
     if (connect(sockfd, (SA*)&servaddr, sizeof(servaddr))
         != 0) {
         printf("connection with the server failed...\n");
         exit(0);
     }
-    else
-        printf("connected to the server..\n");
+
+    printf("connected to the server..\n");
+    
  
     // function for chat
+    printf("Sending public key...\n");
     send(sockfd, public_key, strlen(public_key), 0);
+    printf("Public key sent\n");
+
     char * server_key = malloc(strlen(public_key));
+    printf("Receiving server key...\n");
     recv(sockfd, server_key, strlen(server_key), 0);
+    printf("Server key received\n");
 
     // connect_to_vpn(server_key, private_key, allowed_ips);
+
     char* command = malloc(2000);
+    printf("Running client interface...\n");
     sprintf(command, "./client_interface.sh %s %s %s", server_key, allowed_ips, server_endpoint);
     system(command);
+    
     free(command);
     // close the socket
     close(sockfd);

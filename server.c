@@ -13,6 +13,7 @@
 
 
 char * dhcp_lease_ip(char * publicKey) {
+    printf("Getting IP address for public key: %s\n", publicKey);
     char * ip = getIPAddress(publicKey);
     if (ip == NULL) {
         ip = generateIPAddress();
@@ -21,6 +22,7 @@ char * dhcp_lease_ip(char * publicKey) {
         }
         addEntry(publicKey, ip);
     }
+    printf("IP address for client is %s\n", ip);
     return ip;
 }
 
@@ -35,6 +37,8 @@ void generate_peer(char* public_key, char* ip_address) {
 }
 
 void handle_client(int client_socket, char* public_key, char * server_public_key) {
+    printf("Handling client\n");
+    printf("Generating Peer with public key: %s\n", public_key);
     generate_peer(public_key, dhcp_lease_ip(public_key));
     send(client_socket, server_public_key, strlen(server_public_key), 0);
 }
@@ -86,6 +90,7 @@ int main(int argc, char * args[]) {
             perror("accept failed");
             exit(EXIT_FAILURE);
         }
+        printf("Accepted new client connection\n");
 
         // Read the public key provided by the client
         memset(buffer, 0, BUFFER_SIZE);
@@ -94,6 +99,7 @@ int main(int argc, char * args[]) {
             perror("read failed");
             exit(EXIT_FAILURE);
         }
+        printf("Received %ld bytes\n", bytes_received);
 
         // Process the public key and send the file
         if (bytes_received > 0) {
