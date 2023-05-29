@@ -7,7 +7,7 @@
 #include <sys/socket.h>
 #include "dhcp_utils.c"
 
-#define PORT 12349
+#define PORT 51822
 #define BUFFER_SIZE 1024
 
 
