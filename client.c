@@ -51,7 +51,7 @@ int main(int argc, char* args[])
 
     //store the public key that is stored in public_key to the variable char * public_key
     FILE *fp;
-    fp = fopen("public_key.txt", "r");
+    fp = fopen("publickey", "r");
     if(fp == NULL){
         printf("Error opening file\n");
         exit(1);
@@ -63,7 +63,7 @@ int main(int argc, char* args[])
     fread(public_key, fsize, 1, fp);
     fclose(fp);
     public_key[fsize] = 0;
-    
+
 
     printf("Keys generated\n");
     // connect the client socket to server socket

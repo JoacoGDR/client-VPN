@@ -27,27 +27,28 @@ char * dhcp_lease_ip(char * publicKey) {
 }
 
 
-void generate_peer(char* public_key, char* ip_address) {
+void generate_peer(char * interface, char* public_key, char* ip_address) {
     char command[BUFFER_SIZE];
     memset(command, 0, BUFFER_SIZE);
 
-    sprintf(command, "wg set wg0 peer %s allowed-ips %s/32", public_key, ip_address);
+    sprintf(command, "wg set %s peer %s allowed-ips %s/32",interface, public_key, ip_address);
     printf("Running command: %s\n", command);
     system(command);
 }
 
-void handle_client(int client_socket, char* public_key, char * server_public_key) {
+void handle_client(int client_socket,char * interface, char* public_key, char * server_public_key) {
     printf("Handling client\n");
     printf("Generating Peer with public key: %s\n", public_key);
-    generate_peer(public_key, dhcp_lease_ip(public_key));
+    generate_peer(interface, public_key, dhcp_lease_ip(public_key));
     send(client_socket, server_public_key, strlen(server_public_key), 0);
 }
 
 int main(int argc, char * args[]) {
-    if(argc != 2){
+    if(argc != 3){
         return 0;
     }
     char * server_public_key = args[1];
+    char * interface = args[2];
     int server_fd, client_socket;
     struct sockaddr_in address;
     int opt = 1;
@@ -104,7 +105,7 @@ int main(int argc, char * args[]) {
         // Process the public key and send the file
         if (bytes_received > 0) {
             printf("Received public key: %s\n", buffer);
-            handle_client(client_socket, buffer, server_public_key);
+            handle_client(client_socket, interface, buffer, server_public_key);
         }
 
         // Close the client socket
