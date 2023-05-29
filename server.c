@@ -31,7 +31,7 @@ void generate_peer(char * interface, char* public_key, char* ip_address) {
     char command[BUFFER_SIZE];
     memset(command, 0, BUFFER_SIZE);
 
-    sprintf(command, "wg set %s peer %s allowed-ips %s/32",interface, public_key, ip_address);
+    sprintf(command, "sudo wg set %s peer %s allowed-ips %s/32",interface, public_key, ip_address);
     printf("Running command: %s\n", command);
     system(command);
 }
@@ -40,6 +40,7 @@ void handle_client(int client_socket,char * interface, char* public_key, char * 
     printf("Handling client\n");
     printf("Generating Peer with public key: %s\n", public_key);
     generate_peer(interface, public_key, dhcp_lease_ip(public_key));
+    printf("Going to send to client the server public key: %s\n", server_public_key);
     send(client_socket, server_public_key, strlen(server_public_key), 0);
 }
 
