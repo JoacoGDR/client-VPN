@@ -59,10 +59,10 @@ int main(int argc, char* args[])
     fseek(fp, 0, SEEK_END);
     long fsize = ftell(fp);
     fseek(fp, 0, SEEK_SET);
-    public_key = malloc(fsize + 1);
+    public_key = malloc(fsize+1);
     fread(public_key, fsize, 1, fp);
     fclose(fp);
-    public_key[fsize] = 0;
+    public_key[fsize-1] = 0; // remove \n
 
 
     printf("Keys generated\n");
@@ -84,7 +84,7 @@ int main(int argc, char* args[])
     char * server_key = malloc(strlen(public_key));
     printf("Receiving server key...\n");
     recv(sockfd, server_key, strlen(server_key), 0);
-    printf("Server key received\n");
+    printf("Server key received holas %s\n", server_key);
 
     // connect_to_vpn(server_key, private_key, allowed_ips);
 
