@@ -37,14 +37,24 @@ void generate_peer(char * interface, char* public_key, char* ip_address) {
 void handle_client(int client_socket,char * interface, char* public_key, char * server_public_key) {
     printf("Handling client\n");
     printf("Generating Peer with public key: %s\n", public_key);
-    generate_peer(interface, public_key, dhcp_lease_ip(public_key));
+
+    char * ip = dhcp_lease_ip(public_key);
+    generate_peer(interface, public_key, ip);
     printf("Going to send to client the server public key: %s\n", server_public_key);
     ssize_t bytes = send(client_socket, server_public_key, strlen(server_public_key), 0);
     if (bytes < 0) {
         perror("send failed");
         exit(EXIT_FAILURE);
     }
-    printf("Sent %ld bytes to client\n", bytes);
+    printf("Sent key: %ld bytes to client\n", bytes);
+
+    bytes = send(client_socket, ip, strlen(ip), 0);
+    if (bytes < 0) {
+        perror("send failed");
+        exit(EXIT_FAILURE);
+    }
+    printf("Sent ip: %ld bytes to client\n", bytes);
+
 }
 
 int main(int argc, char * args[]) {
