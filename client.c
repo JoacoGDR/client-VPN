@@ -1,27 +1,14 @@
 #include <arpa/inet.h> // inet_addr()
-
 #include <netdb.h>
-
 #include <stdio.h>
-
 #include <stdlib.h>
-
 #include <string.h>
-
 #include <strings.h> // bzero()
-
 #include <sys/socket.h>
-
 #include <unistd.h> // read(), write(), close()
-
 #define MAX 80
-
 #define PORT 51822
-
 #define SA struct sockaddr
-
-
-
 
 
  // oublic key y public adress de server
@@ -35,87 +22,40 @@ int main(int argc, char* args[])
         return 0;
 
     }
-
     char * server_endpoint = args[1];
-
     char * allowed_ips = args[2];
-
-
-
     printf("Server endpoint: %s\n", server_endpoint);
-
     printf("Allowed ips: %s\n", allowed_ips);
-
     int sockfd, connfd;
-
     struct sockaddr_in servaddr, cli;
-
     // socket create and verification
-
-
-
     printf("Creating socket...\n");
-
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
-
     if (sockfd == -1) {
-
+        perror("error: ");
         printf("socket creation failed...\n");
-
         exit(0);
-
     }
-
-    
-
     printf("Socket successfully created..\n");
-
     printf("Setting up server address...\n");
-
     bzero(&servaddr, sizeof(servaddr));
-
-    
-
-    // assign IP, PORT
-
+   // assign IP, PORT
     servaddr.sin_family = AF_INET;
-
     servaddr.sin_addr.s_addr = inet_addr(server_endpoint);
-
     servaddr.sin_port = htons(PORT);
-
-
-
     printf("Server address set\n");
-
-
-
     char * public_key;
-
     printf("Generating keys...\n");
-
     system("./client_setup.sh");
-
-
-
-
-
     //store the public key that is stored in public_key to the variable char * public_key
-
     FILE *fp;
-
     fp = fopen("publickey", "r");
-
     if(fp == NULL){
-
+        perror("error");
         printf("Error opening file\n");
-
         exit(1);
-
     }
-
     fseek(fp, 0, SEEK_END);
-
     long fsize = ftell(fp);
 
     fseek(fp, 0, SEEK_SET);
