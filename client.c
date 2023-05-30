@@ -77,9 +77,8 @@ int main(int argc, char* args[])
     // connect the client socket to server socket
 
     if (connect(sockfd, (SA*)&servaddr, sizeof(servaddr))
-
-        != 0) {
-
+       != 0) {
+        perror("error");
         printf("connection with the server failed...\n");
 
         exit(0);
