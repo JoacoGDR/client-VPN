@@ -14,13 +14,9 @@
  // oublic key y public adress de server
 
 int main(int argc, char* args[])
-
 {
-
     if(argc != 3){
-
         return 0;
-
     }
     char * server_endpoint = args[1];
     char * allowed_ips = args[2];
@@ -57,80 +53,35 @@ int main(int argc, char* args[])
     }
     fseek(fp, 0, SEEK_END);
     long fsize = ftell(fp);
-
     fseek(fp, 0, SEEK_SET);
-
     public_key = malloc(fsize+1);
-
     fread(public_key, fsize, 1, fp);
-
     fclose(fp);
-
     public_key[fsize-1] = 0; // remove \n
-
-
-
-
-
     printf("Keys generated\n");
-
     // connect the client socket to server socket
-
     if (connect(sockfd, (SA*)&servaddr, sizeof(servaddr))
        != 0) {
         perror("error");
         printf("connection with the server failed...\n");
-
         exit(0);
-
     }
-
-
-
     printf("connected to the server..\n");
-
-    
-
- 
-
     // function for chat
-
     printf("Sending public key...\n");
-
     send(sockfd, public_key, strlen(public_key), 0);
-
     printf("Public key sent\n");
-
-
-
     char * server_key = calloc(sizeof(char), strlen(public_key));
-
     printf("Receiving server key...\n");
-
     recv(sockfd, server_key, strlen(public_key), 0);
-
     printf("Server key received: %s\n", server_key);
 
-
-
     // connect_to_vpn(server_key, private_key, allowed_ips);
-
-
-
     char* command = malloc(2000);
-
     printf("Running client interface...\n");
-
     sprintf(command, "./client_interface.sh %s %s %s", server_key, allowed_ips, server_endpoint);
-
     system(command);
-
-
-
     free(command);
-
     // close the socket
-
     close(sockfd);
-
 }
