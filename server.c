@@ -30,7 +30,7 @@ char * dhcp_lease_ip(char * publicKey) {
 void generate_peer(char * interface, char* public_key, char* ip_address) {
     char * command = calloc (sizeof(char),2000);
     printf("Generating peer with interface: %s, public key: %s, and IP address: %s\n", interface, public_key, ip_address);
-    sprintf(command,"./server_add_client.sh %s %s %s", interface, public_key, ip_address);
+    sprintf(command,"sudo ./server_add_client.sh %s %s %s", interface, public_key, ip_address);
     system(command);
 }
 
